@@ -1,4 +1,4 @@
-# bus_driver
+# Bus Driver
 
 A bus driver application to keep track of the real time location of the bus.
 
