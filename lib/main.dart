@@ -1,5 +1,4 @@
-import 'dart:async';
-
+import 'package:android_intent/android_intent.dart';
 import 'package:bus_driver/AppStateNotifier.dart';
 import 'package:bus_driver/Report.dart';
 import 'package:bus_driver/Settings.dart';
@@ -12,38 +11,102 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 void main() {
   runApp(
     ChangeNotifierProvider<AppStateNotifier>(
       create: (context) => AppStateNotifier(),
-      child: DriverApp(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: BusDriver(),
+      ),
     ),
   );
 }
 
-class DriverApp extends StatefulWidget {
+class BusDriver extends StatefulWidget {
   static const String routeName = '/main';
   @override
-  _DriverAppState createState() => _DriverAppState();
+  _BusDriverState createState() => _BusDriverState();
 }
 
-class _DriverAppState extends State<DriverApp> {
+class _BusDriverState extends State<BusDriver> {
+  AppStateNotifier appStateNotifier = AppStateNotifier();
   Geolocator geolocator = Geolocator();
   Firestore firestore = Firestore.instance;
   Geoflutterfire geoflutterfire = Geoflutterfire();
   var _selectedBusItem;
   var _selectedRouteItem;
-  _start() {
+
+  _start() async {
     print(_selectedBusItem);
     print(_selectedRouteItem);
-    _addGeoPoint();
+    showAlert();
+    if (!(await geolocator.isLocationServiceEnabled())) {
+      _addGeoPoint();
+    }
+  }
+
+  Future<void> showAlert() async {
+    if (!(await geolocator.isLocationServiceEnabled())) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(
+              'GPS Location',
+              style: TextStyle(
+                color:
+                    appStateNotifier.isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+            content: Text(
+              'You need to turn on GPS location',
+              style: TextStyle(
+                color:
+                    appStateNotifier.isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+            backgroundColor: appStateNotifier.isDarkMode
+                ? Colors.grey[900]
+                : Colors.grey[200],
+            actions: [
+              FlatButton(
+                child: Text(
+                  'Ok',
+                  style: TextStyle(
+                    color: appStateNotifier.isDarkMode
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                ),
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  if (Theme.of(context).platform == TargetPlatform.android) {
+                    final AndroidIntent intent = AndroidIntent(
+                        action: 'android.settings.LOCATION_SOURCE_SETTINGS');
+                    await intent.launch();
+                  }
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   Future<DocumentReference> _addGeoPoint() async {
+    if (await Permission.location.isDenied) {
+      await Permission.location.request();
+    }
+    print(geolocator.isLocationServiceEnabled());
+    print(context);
     var pos = await geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.bestForNavigation);
+    print(pos);
     GeoFirePoint point =
         geoflutterfire.point(latitude: pos.latitude, longitude: pos.longitude);
     return firestore.collection('locations').add({
@@ -223,7 +286,7 @@ class _DriverAppState extends State<DriverApp> {
             ),
           ),
           routes: {
-            Routes.main: (context) => DriverApp(),
+            Routes.main: (context) => BusDriver(),
             Routes.settings: (context) => Settings(),
             Routes.signout: (context) => SignOut(),
             Routes.report: (context) => Report(),

@@ -31,15 +31,17 @@ class _SettingsState extends State<Settings> {
           ),
         ),
       ),
-      body: Row(
-        children: [
-          Text(
-            'Report',
-            style: TextStyle(
-              color: isDark ? Colors.white : Colors.black,
+      body: Center(
+        child: Row(
+          children: [
+            Text(
+              'Report',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

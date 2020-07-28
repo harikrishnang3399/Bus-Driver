@@ -11,7 +11,7 @@ class AppTheme {
       color: Colors.white,
     ),
     iconTheme: IconThemeData(
-      color: Colors.white, //change your color here
+      color: Colors.white,
     ),
     canvasColor: Colors.white,
     buttonTheme: ButtonThemeData(
@@ -28,7 +28,7 @@ class AppTheme {
       color: Colors.black,
     ),
     iconTheme: IconThemeData(
-      color: Colors.black, //change your color here
+      color: Colors.black,
     ),
     canvasColor: Colors.black,
     buttonTheme: ButtonThemeData(
